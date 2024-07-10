@@ -6,25 +6,20 @@ import spyrograph as sp
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 import random
+import threading
 
 text_obj = None
 rotations = 0
 
+locking = threading.Lock()
+
 # Function to draw the spirograph pattern on the canvas
 def get_epitrochoid(R, r, d, max_radius, res):
     global rotations
-    
-    epitrochoid = sp.Epitrochoid(R = R, r = r, d = d, thetas = np.arange(0, (1024 * np.pi) + (np.pi / res), np.pi / res).tolist())
-    
-    coords = []
     thetamax = 0 
     
-    for i in epitrochoid.coords:
-        temp = []
-        temp.append(round(i[0], 10))
-        temp.append(round(i[1], 10))
-        temp.append(round(i[2], 10))
-        coords.append(temp)
+    epitrochoid = sp.Epitrochoid(R = R, r = r, d = d, thetas = np.arange(0, (1024 * np.pi) + (np.pi / res), np.pi / res).tolist())
+    coords = [[round(x,10),round(y,10),round(z,10)] for x, y, z in epitrochoid.coords]
     
     for i in range(1, len(coords)):
         if coords[i][0] == coords[0][0] and coords[i][1] == coords[0][1]:
@@ -34,17 +29,12 @@ def get_epitrochoid(R, r, d, max_radius, res):
     
     scale = max_radius / epitrochoid.max_x
     
-    del(i, temp, coords, epitrochoid)
     return sp.Epitrochoid(R = R, r = r, d = d, thetas = np.arange(0, (thetamax * np.pi) + (np.pi / res), np.pi / res).tolist()).scale(scale)
 
 def update_plot():
     global text_obj
     
-    R = R_slider.get()
-    r = r_slider.get()
-    d = d_slider.get()
-    max_radius = max_radius_slider.get()
-    res = res_slider.get()
+    R, r, d, max_radius, res = (slider.get() for slider in [R_slider, r_slider, d_slider, max_radius_slider, res_slider])
     
     epitrochoid = get_epitrochoid(R, r, d, max_radius, res)
     
@@ -53,18 +43,21 @@ def update_plot():
     if text_obj is not None:
         text_obj.remove()
     
-    vartext = f'R: {R} | r: {r} | d: {d}\nMax Radius: {max_radius}\nResolution: {res}\nClosed: {epitrochoid.is_closed()}\n{len(epitrochoid.coords)} points, {rotations} rotations\nDiameter: {round((epitrochoid.max_x * 2),3)} mm'
-    text_obj = fig.text(0.95, 0.95, vartext, fontsize = 10, verticalalignment = 'top', horizontalalignment = 'right', bbox = dict(facecolor= 'white', alpha = 0.5))
+    text_obj = fig.text(0.95, 0.95, f'R: {R} | r: {r} | d: {d}\nMax Radius: {max_radius}\nResolution: {res}\nClosed: {epitrochoid.is_closed()}\n{len(epitrochoid.coords)} points, {rotations} rotations\nDiameter: {round((epitrochoid.max_x * 2),3)} mm', fontsize = 10, verticalalignment = 'top', horizontalalignment = 'right', bbox = dict(facecolor= 'white', alpha = 0.5))
     
-    y = epitrochoid.y + max_radius
-    x = epitrochoid.x + max_radius
-    ax.plot(x, y)
+    ax.plot(epitrochoid.x + max_radius, epitrochoid.y + max_radius)
     ax.axis('equal')
     
     canvas.draw()
 
+def update_plot_threaded():
+    def task():
+        with locking:
+            root.after(0, update_plot)
+    threading.Thread(target=task).start()
+
 def on_slider_change(val):
-    update_plot()
+    update_plot_threaded()
 
 def randomize_sliders():
     R_slider.set(random.randint(1, 100))
