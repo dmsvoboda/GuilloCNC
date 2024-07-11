@@ -7,6 +7,7 @@ import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 import random
 import threading
+import math
 
 text_obj = None
 rotations = 0
@@ -23,7 +24,7 @@ def get_epitrochoid(R, r, d, max_radius, res):
     
     for i in range(1, len(coords)):
         if coords[i][0] == coords[0][0] and coords[i][1] == coords[0][1]:
-            thetamax = round(((coords[i][2] - (np.pi / res)) / np.pi))
+            thetamax = math.ceil(((coords[i][2] - (np.pi / res)) / np.pi))
             rotations = thetamax
             break
     
@@ -97,7 +98,7 @@ r_slider = tk.Scale(slider_frame, label='Radius of rollng circle', from_=1, to=1
 r_slider.set(30)
 r_slider.pack(side=tk.TOP, fill=tk.X, expand=1)
 
-d_slider = tk.Scale(slider_frame, label='Trace point distance from rolling circle', from_=1, to=100, resolution=1, orient=tk.HORIZONTAL, command=on_slider_change)
+d_slider = tk.Scale(slider_frame, label='Trace point distance from rolling circle', from_=1, to=100, resolution=0.1, orient=tk.HORIZONTAL, command=on_slider_change)
 d_slider.set(20)
 d_slider.pack(side=tk.TOP, fill=tk.X, expand=1)
 
