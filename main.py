@@ -1,4 +1,4 @@
-# Imports
+# IMPORTS
 import tkinter as tk
 from tkinter import ttk
 import numpy as np
@@ -9,12 +9,14 @@ import random
 import threading
 import math
 
+# VARIABLES
 text_obj = None
 rotations = 0
+selected_shape = None
 
 locking = threading.Lock()
 
-# Function to draw the spirograph pattern on the canvas
+# FUNCTIONS
 def get_epitrochoid(R, r, d, max_radius, res):
     global rotations
     thetamax = 0 
@@ -56,6 +58,8 @@ def update_plot_threaded():
         with locking:
             root.after(0, update_plot)
     threading.Thread(target=task).start()
+    
+    print(selected_shape.get())
 
 def on_slider_change(val):
     update_plot_threaded()
@@ -71,6 +75,7 @@ def on_closing():
     root.quit()
     root.destroy()
 
+# GUI
 # Create root window
 root = tk.Tk()
 root.title("GuilloCNC")
@@ -88,6 +93,12 @@ plot_frame.grid(row=0, column=1, sticky='nsew')
 root.grid_columnconfigure(0, weight=2)
 root.grid_columnconfigure(1, weight=1)
 root.grid_rowconfigure(0, weight=1)
+
+# Create shape dropdown menu
+selected_shape = tk.StringVar()
+shape_combobox = ttk.Combobox(slider_frame, textvariable=selected_shape, state='readonly', values=['Epitrochoid', 'Hypotrochoid'], postcommand=update_plot_threaded)
+shape_combobox.set('Epitrochoid')
+shape_combobox.pack(side=tk.TOP, fill=tk.X, expand=1)
 
 # Create sliders for R, r, d, max_radius, and res
 R_slider = tk.Scale(slider_frame, label='Radius of fixed circle', from_=1, to=100, resolution=1, orient=tk.HORIZONTAL, command=on_slider_change)
