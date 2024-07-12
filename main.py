@@ -11,9 +11,22 @@ import math
 import datetime
 
 # VARIABLES
+# Create root window
+root = tk.Tk()
+root.title("GuilloCNC")
+root.geometry('800x600')
+
+# Create configuration variables
+R = tk.IntVar()
+r = tk.IntVar()
+d = tk.DoubleVar()
+max_radius = tk.IntVar()
+res = tk.IntVar()
+selected_shape = None
+
 text_obj = None
 rotations = 0
-selected_shape = None
+
 
 locking = threading.Lock()
 
@@ -52,11 +65,11 @@ def get_hypotrochoid(R, r, d, max_radius, res):
     
     return sp.Hypotrochoid(R = R, r = r, d = d, thetas = np.arange(0, (thetamax * np.pi) + (np.pi / res), np.pi / res).tolist()).scale(scale)
 
-#def get_shape(selected_shape, R, r, d, max_radius, res):
-#    if selected_shape == 'Epitrochoid':
-#        return get_epitrochoid(R, r, d, max_radius, res)
-#    elif selected_shape == 'Hypotrochoid':
-#        return get_hypotrochoid(R, r, d, max_radius, res)
+def get_shape(selected_shape, R, r, d, max_radius, res):
+    if selected_shape == 'Epitrochoid':
+        return get_epitrochoid(R, r, d, max_radius, res)
+    elif selected_shape == 'Hypotrochoid':
+        return get_hypotrochoid(R, r, d, max_radius, res)
 
 def update_plot():
     global text_obj
@@ -74,7 +87,7 @@ def update_plot():
     if text_obj is not None:
         text_obj.remove()
     
-    text_obj = fig.text(0.95, 0.95, f'{selected_shape}\nR: {R} | r: {r} | d: {d}\nMax Radius: {max_radius}\nResolution: {res}\nClosed: {shape.is_closed()}\n{len(shape.coords)} points, {rotations} rotations\nDiameter: {round((shape.max_x * 2),3)} mm', fontsize = 10, verticalalignment = 'top', horizontalalignment = 'right', bbox = dict(facecolor= 'white', alpha = 0.5))
+    text_obj = fig.text(0.95, 0.95, f'{selected_shape.get()}\nR: {R} | r: {r} | d: {d}\nMax Radius: {max_radius}\nResolution: {res}\nClosed: {shape.is_closed()}\n{len(shape.coords)} points, {rotations} rotations\nDiameter: {round((shape.max_x * 2),3)} mm', fontsize = 10, verticalalignment = 'top', horizontalalignment = 'right', bbox = dict(facecolor= 'white', alpha = 0.5))
     
     ax.plot(shape.x + max_radius, shape.y + max_radius)
     ax.axis('equal')
@@ -151,11 +164,6 @@ def on_closing():
     root.destroy()
 
 # GUI
-# Create root window
-root = tk.Tk()
-root.title("GuilloCNC")
-root.geometry('800x600')
-
 # Create sliders frame
 slider_frame = ttk.Frame(root)
 slider_frame.grid(row=0, column=0, sticky='nsew')
@@ -176,23 +184,23 @@ shape_combobox.set('Epitrochoid')
 shape_combobox.pack(side=tk.TOP, fill=tk.X, expand=1)
 
 # Create sliders for R, r, d, max_radius, and res
-R_slider = tk.Scale(slider_frame, label='Radius of fixed circle', from_=1, to=100, resolution=1, orient=tk.HORIZONTAL, command=on_slider_change)
+R_slider = tk.Scale(slider_frame, label='Radius of fixed circle', from_=1, to=100, resolution=1, variable=R, orient=tk.HORIZONTAL, command=on_slider_change)
 R_slider.set(50)
 R_slider.pack(side=tk.TOP, fill=tk.X, expand=1)
 
-r_slider = tk.Scale(slider_frame, label='Radius of rollng circle', from_=1, to=100, resolution=1, orient=tk.HORIZONTAL, command=on_slider_change)
+r_slider = tk.Scale(slider_frame, label='Radius of rollng circle', from_=1, to=100, resolution=1, variable=r, orient=tk.HORIZONTAL, command=on_slider_change)
 r_slider.set(30)
 r_slider.pack(side=tk.TOP, fill=tk.X, expand=1)
 
-d_slider = tk.Scale(slider_frame, label='Trace point distance from rolling circle', from_=1, to=100, resolution=0.1, orient=tk.HORIZONTAL, command=on_slider_change)
+d_slider = tk.Scale(slider_frame, label='Trace point distance from rolling circle', from_=1, to=100, resolution=0.1, variable=d, orient=tk.HORIZONTAL, command=on_slider_change)
 d_slider.set(20)
 d_slider.pack(side=tk.TOP, fill=tk.X, expand=1)
 
-max_radius_slider = tk.Scale(slider_frame, label='Max overall radius', from_=1, to=100, resolution=1, orient=tk.HORIZONTAL, command=on_slider_change)
+max_radius_slider = tk.Scale(slider_frame, label='Max overall radius', from_=1, to=100, resolution=1, variable=max_radius, orient=tk.HORIZONTAL, command=on_slider_change)
 max_radius_slider.set(22)
 max_radius_slider.pack(side=tk.TOP, fill=tk.X, expand=1)
 
-res_slider = tk.Scale(slider_frame, label='Resolution', from_=1, to=50, resolution=1, orient=tk.HORIZONTAL, command=on_slider_change)
+res_slider = tk.Scale(slider_frame, label='Resolution', from_=1, to=50, resolution=1, variable=res, orient=tk.HORIZONTAL, command=on_slider_change)
 res_slider.set(25)
 res_slider.pack(side=tk.TOP, fill=tk.X, expand=1)
 
