@@ -8,6 +8,7 @@ from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 import random
 import threading
 import math
+import datetime
 
 # VARIABLES
 text_obj = None
@@ -63,6 +64,53 @@ def update_plot_threaded():
 
 def on_slider_change(val):
     update_plot_threaded()
+
+def export_gcode():
+    coords = []
+    shape = get_epitrochoid(R_slider.get(), r_slider.get(), d_slider.get(), max_radius_slider.get(), res_slider.get())
+    last_x = -999
+    last_y = -999
+    omitted = 0
+    
+    # Clean the coordinates, convert them from millimeters to inches, and omit duplicates
+    for coord in shape.coords:
+        coords.append((round(coord[0] * 0.0393701, 3), round(coord[1] * 0.0393701, 3)))
+        #coords.append((round(coord[0], 3), round(coord[1], 3)))
+    
+    currdatetime = datetime.datetime.now()
+    date_time = currdatetime.strftime("%Y-%m-%d_%H-%M-%S")
+    
+    with open(f'.output\\guilloche_{date_time}.gcode', 'w') as f:
+        f.write('%\n')
+        f.write('o42069\n')
+        f.write('G90\n')
+        f.write('G20\n')
+        f.write('G17\n')
+        f.write('G40\n')
+        f.write('G49\n')
+        f.write('G80\n\n')
+        f.write('G00 G54 X0 Y0\n\n')
+        f.write('N100 M05 T01\n')
+        f.write('S7000 M03\n')
+        f.write('G00 G43 Z1.0 H01 M08\n')
+        f.write(f'G01 X{coords[0][0]} Y{coords[0][1]} F20.\n')
+        f.write('G01 Z-0.005 F8.\n\n')
+        f.write('(start chewing)\n\n')
+        
+        for coord in coords:
+            if coord[0] != last_x or coord[1] != last_y:
+                f.write(f'G01 X{coord[0]} Y{coord[1]} F20.\n')
+                last_x = coord[0]
+                last_y = coord[1]
+            else:
+                omitted += 1
+        
+        f.write('\n\nG01 Z1.0 F20.\n')
+        f.write('G00 G53 Z0 M09\n')
+        f.write('G00 G53 Y0 M05\n')
+        f.write('\n\nM30\n%')
+    
+    print(f'{omitted} points omitted')
 
 def randomize_sliders():
     R_slider.set(random.randint(1, 100))
@@ -121,9 +169,17 @@ res_slider = tk.Scale(slider_frame, label='Resolution', from_=1, to=50, resoluti
 res_slider.set(25)
 res_slider.pack(side=tk.TOP, fill=tk.X, expand=1)
 
+# Create button frame
+button_frame = ttk.Frame(slider_frame)
+button_frame.pack(side=tk.BOTTOM, fill=tk.X, expand=1)
+
 # Create randomize button
 randomize_button = ttk.Button(slider_frame, text="Randomize", command=randomize_sliders)
-randomize_button.pack(side=tk.BOTTOM, fill=tk.X, expand=1)
+randomize_button.pack(side=tk.LEFT, fill=tk.X, expand=0)
+
+# Create export button
+export_button = ttk.Button(button_frame, text="Export", command=export_gcode)
+export_button.pack(side=tk.RIGHT, fill=tk.X, expand=0)
 
 # Create a MPL figure and axes
 fig, ax = plt.subplots()
