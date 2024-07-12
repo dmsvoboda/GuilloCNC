@@ -8,3 +8,7 @@ This list is a combination of things that definitely should be done and things t
 4. [ ] Accurate cut width in preview
 5. [ ] Z-axis generation
 6. [ ] 3D Preview
+7. [ ] Save favorites
+8. [ ] User preferences
+   1. [ ] Display settings
+   2. [ ] Color schemes
