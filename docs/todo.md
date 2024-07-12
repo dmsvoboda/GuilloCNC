@@ -1,7 +1,7 @@
 # Todo
 This list is a combination of things that definitely should be done and things that would be nice to have.
 
-1. [ ] .gcode export
+1. [X] .gcode export
 2. [ ] Add the ability to generate different shapes
    1. [ ] (Spyrograph functions) If a function requires different sliders, add or remove them as needed
 3. [ ] Configurable bit width
