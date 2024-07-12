@@ -23,7 +23,7 @@ def get_epitrochoid(R, r, d, max_radius, res):
     thetamax = 0 
     
     epitrochoid = sp.Epitrochoid(R = R, r = r, d = d, thetas = np.arange(0, (1024 * np.pi) + (np.pi / res), np.pi / res).tolist())
-    coords = [[round(x,10),round(y,10),round(z,10)] for x, y, z in epitrochoid.coords]
+    coords = [[round(x, 10), round(y, 10), round(z, 10)] for x, y, z in epitrochoid.coords]
     
     for i in range(1, len(coords)):
         if coords[i][0] == coords[0][0] and coords[i][1] == coords[0][1]:
@@ -35,21 +35,48 @@ def get_epitrochoid(R, r, d, max_radius, res):
     
     return sp.Epitrochoid(R = R, r = r, d = d, thetas = np.arange(0, (thetamax * np.pi) + (np.pi / res), np.pi / res).tolist()).scale(scale)
 
+def get_hypotrochoid(R, r, d, max_radius, res):
+    global rotations
+    thetamax = 0
+    
+    hypotrochoid = sp.Hypotrochoid(R = R, r = r, d = d, thetas = np.arange(0, (1024 * np.pi) + (np.pi / res), np.pi / res).tolist())
+    coords = [[round(x, 10), round(y, 10), round(z, 10)] for x, y, z in hypotrochoid.coords]
+    
+    for i in range(1, len(coords)):
+        if coords[i][0] == coords[0][0] and coords[i][1] == coords[0][1]:
+            thetamax = math.ceil(((coords[i][2] - (np.pi / res)) / np.pi))
+            rotations = thetamax
+            break
+    
+    scale = max_radius / hypotrochoid.max_x
+    
+    return sp.Hypotrochoid(R = R, r = r, d = d, thetas = np.arange(0, (thetamax * np.pi) + (np.pi / res), np.pi / res).tolist()).scale(scale)
+
+#def get_shape(selected_shape, R, r, d, max_radius, res):
+#    if selected_shape == 'Epitrochoid':
+#        return get_epitrochoid(R, r, d, max_radius, res)
+#    elif selected_shape == 'Hypotrochoid':
+#        return get_hypotrochoid(R, r, d, max_radius, res)
+
 def update_plot():
     global text_obj
+    global selected_shape
     
     R, r, d, max_radius, res = (slider.get() for slider in [R_slider, r_slider, d_slider, max_radius_slider, res_slider])
     
-    epitrochoid = get_epitrochoid(R, r, d, max_radius, res)
+    if selected_shape.get() == 'Epitrochoid':
+        shape = get_epitrochoid(R, r, d, max_radius, res)
+    elif selected_shape.get() == 'Hypotrochoid':
+        shape = get_hypotrochoid(R, r, d, max_radius, res)
     
     ax.clear()
     
     if text_obj is not None:
         text_obj.remove()
     
-    text_obj = fig.text(0.95, 0.95, f'R: {R} | r: {r} | d: {d}\nMax Radius: {max_radius}\nResolution: {res}\nClosed: {epitrochoid.is_closed()}\n{len(epitrochoid.coords)} points, {rotations} rotations\nDiameter: {round((epitrochoid.max_x * 2),3)} mm', fontsize = 10, verticalalignment = 'top', horizontalalignment = 'right', bbox = dict(facecolor= 'white', alpha = 0.5))
+    text_obj = fig.text(0.95, 0.95, f'{selected_shape}\nR: {R} | r: {r} | d: {d}\nMax Radius: {max_radius}\nResolution: {res}\nClosed: {shape.is_closed()}\n{len(shape.coords)} points, {rotations} rotations\nDiameter: {round((shape.max_x * 2),3)} mm', fontsize = 10, verticalalignment = 'top', horizontalalignment = 'right', bbox = dict(facecolor= 'white', alpha = 0.5))
     
-    ax.plot(epitrochoid.x + max_radius, epitrochoid.y + max_radius)
+    ax.plot(shape.x + max_radius, shape.y + max_radius)
     ax.axis('equal')
     
     canvas.draw()
