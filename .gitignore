@@ -1,2 +1,5 @@
 profile.html
 profile.json
+.output
+.vscode
+.venv
