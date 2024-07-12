@@ -75,7 +75,6 @@ def export_gcode():
     # Clean the coordinates, convert them from millimeters to inches, and omit duplicates
     for coord in shape.coords:
         coords.append((round(coord[0] * 0.0393701, 3), round(coord[1] * 0.0393701, 3)))
-        #coords.append((round(coord[0], 3), round(coord[1], 3)))
     
     currdatetime = datetime.datetime.now()
     date_time = currdatetime.strftime("%Y-%m-%d_%H-%M-%S")
@@ -83,14 +82,14 @@ def export_gcode():
     with open(f'.output\\guilloche_{date_time}.gcode', 'w') as f:
         f.write('%\n')
         f.write('o42069\n')
-        f.write('G90\n')
-        f.write('G20\n')
-        f.write('G17\n')
-        f.write('G40\n')
-        f.write('G49\n')
-        f.write('G80\n\n')
-        f.write('G00 G54 X0 Y0\n\n')
-        f.write('N100 M05 T01\n')
+        f.write('G90\n')    # Use absolute coordinates
+        f.write('G20\n')    # Use inches
+        f.write('G17\n')    # Use XY plane
+        f.write('G40\n')    # Cancel cutter radius compensation
+        f.write('G49\n')    # Cancel tool length offset
+        f.write('G80\n\n')  # Cancel canned cycles
+        f.write('G00 G54 X0 Y0\n\n')    # Rapid move to origin
+        f.write('N100 M05 T01\n')   # Tool
         f.write('S7000 M03\n')
         f.write('G00 G43 Z1.0 H01 M08\n')
         f.write(f'G01 X{coords[0][0]} Y{coords[0][1]} F20.\n')
@@ -98,6 +97,7 @@ def export_gcode():
         f.write('(start chewing)\n\n')
         
         for coord in coords:
+            # Do not write the same coordinates twice
             if coord[0] != last_x or coord[1] != last_y:
                 f.write(f'G01 X{coord[0]} Y{coord[1]} F20.\n')
                 last_x = coord[0]
